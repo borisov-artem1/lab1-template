@@ -1,30 +1,93 @@
 name: GitHub Classroom Workflow
+
 on:
   push:
     branches:
-      - master
+      - dev
   pull_request:
     branches:
-      - master
+      - dev
+
 jobs:
   build:
     name: Autograding
     runs-on: ubuntu-latest
+
     steps:
+      # Шаг 1: Клонируем репозиторий
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      # TODO build, test and deploy project
+      # Шаг 2: Установка Python и зависимостей
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'
 
+      - name: Install dependencies
+        run: |
+          python -m venv venv
+          . venv/bin/activate
+          pip install -r requirements.txt
+
+      # Шаг 3: Настройка базы данных PostgreSQL
+      - name: Set up PostgreSQL
+        uses: Harmon758/postgresql-action@v1.0.0
+        with:
+          postgresql version: '13'
+          postgresql username: 'program'
+          postgresql password: 'test'
+          postgresql dbname: 'persons'
+
+      - name: Run migrations
+        run: |
+          . venv/bin/activate
+          python manage.py migrate
+
+      # Шаг 4: Запуск тестов Django
+      - name: Run Django Tests
+        run: |
+          . venv/bin/activate
+          python manage.py test
+
+      # Шаг 5: Аутентификация в Yandex Cloud
+      - name: Authenticate to Yandex Cloud
+        run: |
+          echo '${{ secrets.YC_SERVICE_ACCOUNT_KEY }}' > key.json
+          yc iam key create --service-account-name github-actions --output key.json
+          yc config set cloud-id ${{ secrets.YC_CLOUD_ID }}
+          yc config set folder-id ${{ secrets.YC_FOLDER_ID }}
+          yc container registry configure-docker
+
+      # Шаг 6: Сборка и отправка Docker-образа в Yandex Container Registry
+      - name: Build and push Docker image
+        run: |
+          docker build -t cr.yandex/${{ secrets.YC_REGION }}/my-registry/my-app:${{ github.sha }} .
+          docker push cr.yandex/${{ secrets.YC_REGION }}/my-registry/my-app:${{ github.sha }}
+
+      # Шаг 7: Деплой на Yandex Compute Cloud
+      - name: Deploy to Yandex Cloud
+        run: |
+          yc compute instance create-with-container \
+            --name my-app-instance \
+            --cores=2 \
+            --memory=4 \
+            --core-fraction=100 \
+            --container-image=cr.yandex/${{ secrets.YC_REGION }}/my-registry/my-app:${{ github.sha }} \
+            --public-ip \
+            --zone ru-central1-a
+
+      # Шаг 8: Запуск тестов API через Postman
       - name: Run API Tests
         uses: matt-ball/newman-action@master
         with:
           collection: postman/[inst] Lab1.postman_collection.json
-          environment: postman/[inst][heroku] Lab1.postman_environment.json
+          environment: postman/[inst] Lab1.postman_environment.json
           delayRequest: 100
           reporters: '[ "cli" ]'
 
+      # Шаг 9: Автогрейдинг
       - name: Autograding
         uses: education/autograding@v1
         continue-on-error: true
@@ -32,7 +95,7 @@ jobs:
       - name: Github auto grader mark
         uses: Romanow/google-sheet-autograder-marker@v1.0
         with:
-          google_token: ${{secrets.GOOGLE_API_KEY}}
+          google_token: ${{ secrets.GOOGLE_API_KEY }}
           sheet_id: "1xkgjUX6Qmk7rdJG-QPOToav-HWWtthJjnShIKnw3oIY"
           homework_number: 1
           user_column: 'D'
