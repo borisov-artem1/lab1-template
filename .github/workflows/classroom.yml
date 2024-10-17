@@ -40,6 +40,11 @@ jobs:
           postgresql password: 'test'
           postgresql dbname: 'persons'
 
+      - name: Make migrations
+        run: |
+            . venv/bin/activate
+            python djangoProject/myproject/manage.py makemigrations
+
       - name: Run migrations
         run: |
           . venv/bin/activate
