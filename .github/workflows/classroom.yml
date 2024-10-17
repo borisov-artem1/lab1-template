@@ -50,8 +50,8 @@ jobs:
       - name: Install Yandex Cloud CLI
         run: |
           curl https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
-          echo 'source /home/runner/.bashrc' >> $GITHUB_ENV
-          yc init --without-key
+          source /home/runner/.bashrc
+          echo 'export PATH="$PATH:/home/runner/yandex-cloud/bin"' >> $GITHUB_ENV
 
       # Шаг 4: Make migrations
       - name: Make migrations
