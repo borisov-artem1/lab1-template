@@ -13,6 +13,21 @@ jobs:
     name: Autograding
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_DB: persons
+          POSTGRES_USER: program
+          POSTGRES_PASSWORD: test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
     steps:
       # Шаг 1: Клонируем репозиторий
       - uses: actions/checkout@v3
@@ -31,28 +46,26 @@ jobs:
           . venv/bin/activate
           pip install -r djangoProject/requirements.txt
 
-      # Шаг 3: Настройка базы данных PostgreSQL
-      - name: Set up PostgreSQL
-        uses: Harmon758/postgresql-action@v1.0.0
-        with:
-          postgresql version: '13'
-          postgresql username: 'artem'
-          postgresql password: 'ArTeM523'
-          postgresql dbname: 'my_db'
+      # Шаг 3: Настройка базы данных PostgreSQL (уже запускается как сервис в Docker)
+      # Шаг 4: Make migrations
+      - name: Make migrations
+        run: |
+          . venv/bin/activate
+          python djangoProject/myproject/manage.py makemigrations
 
-
+      # Шаг 5: Применение миграций
       - name: Run migrations
         run: |
           . venv/bin/activate
           python djangoProject/myproject/manage.py migrate
 
-      # Шаг 4: Запуск тестов Django
+      # Шаг 6: Запуск тестов Django
       - name: Run Django Tests
         run: |
           . venv/bin/activate
           python djangoProject/myproject/manage.py test
 
-      # Шаг 5: Аутентификация в Yandex Cloud
+      # Шаг 7: Аутентификация в Yandex Cloud
       - name: Authenticate to Yandex Cloud
         run: |
           echo '${{ secrets.YC_SERVICE_ACCOUNT_KEY }}' > key.json
@@ -61,13 +74,23 @@ jobs:
           yc config set folder-id ${{ secrets.YC_FOLDER_ID }}
           yc container registry configure-docker
 
-      # Шаг 6: Сборка и отправка Docker-образа в Yandex Container Registry
-      - name: Build and push Docker image
+      # Шаг 8: Сборка Docker-образа приложения
+      - name: Build Docker image
         run: |
           docker build -t cr.yandex/${{ secrets.YC_REGION }}/my-registry/my-app:${{ github.sha }} .
-          docker push cr.yandex/${{ secrets.YC_REGION }}/my-registry/my-app:${{ github.sha }}
 
-      # Шаг 7: Деплой на Yandex Compute Cloud
+      # Шаг 9: Сборка Docker-образа для PostgreSQL
+      - name: Build PostgreSQL Docker image
+        run: |
+          docker build -t cr.yandex/${{ secrets.YC_REGION }}/my-registry/postgres:${{ github.sha }} -f docker/postgres/Dockerfile .
+
+      # Шаг 10: Публикация образов в Yandex Container Registry
+      - name: Push Docker images
+        run: |
+          docker push cr.yandex/${{ secrets.YC_REGION }}/my-registry/my-app:${{ github.sha }}
+          docker push cr.yandex/${{ secrets.YC_REGION }}/my-registry/postgres:${{ github.sha }}
+
+      # Шаг 11: Деплой приложения и базы данных на Yandex Cloud
       - name: Deploy to Yandex Cloud
         run: |
           yc compute instance create-with-container \
@@ -79,7 +102,16 @@ jobs:
             --public-ip \
             --zone ru-central1-a
 
-      # Шаг 8: Запуск тестов API через Postman
+          yc compute instance create-with-container \
+            --name postgres-instance \
+            --cores=2 \
+            --memory=4 \
+            --core-fraction=100 \
+            --container-image=cr.yandex/${{ secrets.YC_REGION }}/my-registry/postgres:${{ github.sha }} \
+            --public-ip \
+            --zone ru-central1-a
+
+      # Шаг 12: Запуск тестов API через Postman
       - name: Run API Tests
         uses: matt-ball/newman-action@master
         with:
@@ -88,7 +120,7 @@ jobs:
           delayRequest: 100
           reporters: '[ "cli" ]'
 
-      # Шаг 9: Автогрейдинг
+      # Шаг 13: Автогрейдинг
       - name: Autograding
         uses: education/autograding@v1
         continue-on-error: true
