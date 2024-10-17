@@ -109,7 +109,7 @@ jobs:
             --cores=2 \
             --memory=4 \
             --core-fraction=100 \
-            --container-image=cr.yandex/${{ secrets.YC_REGION }}/my-registry/my-app:${{ github.sha }} \
+            --container-image=cr.yandex/${{ secrets.YC_REGION }}/artemborisov/my-app:${{ github.sha }} \
             --public-ip \
             --zone ru-central1-a
 
@@ -118,7 +118,7 @@ jobs:
             --cores=2 \
             --memory=4 \
             --core-fraction=100 \
-            --container-image=cr.yandex/${{ secrets.YC_REGION }}/my-registry/postgres:${{ github.sha }} \
+            --container-image=cr.yandex/${{ secrets.YC_REGION }}/artemborisov/postgres:${{ github.sha }} \
             --public-ip \
             --zone ru-central1-a
 
