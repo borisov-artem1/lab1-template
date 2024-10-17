@@ -36,20 +36,21 @@ jobs:
         uses: Harmon758/postgresql-action@v1.0.0
         with:
           postgresql version: '13'
-          postgresql username: 'program'
-          postgresql password: 'test'
-          postgresql dbname: 'persons'
+          postgresql username: 'artem'
+          postgresql password: 'ArTeM523'
+          postgresql dbname: 'my_db'
 
-      - name: Make migrations
+
+      - name: Run migrations
         run: |
-            . venv/bin/activate
-            python djangoProject/myproject/manage.py makemigrations
+          . venv/bin/activate
+          python djangoProject/myproject/manage.py migrate
 
       # Шаг 4: Запуск тестов Django
       - name: Run Django Tests
         run: |
           . venv/bin/activate
-          python manage.py test
+          python djangoProject/myproject/manage.py test
 
       # Шаг 5: Аутентификация в Yandex Cloud
       - name: Authenticate to Yandex Cloud
