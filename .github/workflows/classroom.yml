@@ -45,11 +45,6 @@ jobs:
             . venv/bin/activate
             python djangoProject/myproject/manage.py makemigrations
 
-      - name: Run migrations
-        run: |
-          . venv/bin/activate
-          python djangoProject/myproject/manage.py migrate
-
       # Шаг 4: Запуск тестов Django
       - name: Run Django Tests
         run: |
