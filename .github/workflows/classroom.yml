@@ -46,7 +46,13 @@ jobs:
           . venv/bin/activate
           pip install -r djangoProject/requirements.txt
 
-      # Шаг 3: Настройка базы данных PostgreSQL (уже запускается как сервис в Docker)
+      # Шаг 3: Установка Yandex Cloud CLI
+      - name: Install Yandex Cloud CLI
+        run: |
+          curl https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
+          echo 'source /home/runner/.bashrc' >> $GITHUB_ENV
+          yc init --without-key
+
       # Шаг 4: Make migrations
       - name: Make migrations
         run: |
