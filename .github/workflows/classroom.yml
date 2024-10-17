@@ -94,8 +94,8 @@ jobs:
       # Шаг 10: Публикация образов в Yandex Container Registry
       - name: Push Docker images
         run: |
-          docker push cr.yandex/${{ secrets.YC_REGION }}/my-registry/my-app:${{ github.sha }}
-          docker push cr.yandex/${{ secrets.YC_REGION }}/my-registry/postgres:${{ github.sha }}
+          docker push cr.yandex/${{ secrets.YC_REGION }}/${{ secrets.CR_REPOSITORY }}/my-registry/my-app:${{ github.sha }}
+          docker push cr.yandex/${{ secrets.YC_REGION }}/${{ secrets.CR_REPOSITORY }}/my-registry/postgres:${{ github.sha }}
 
       # Шаг 11: Деплой приложения и базы данных на Yandex Cloud
       - name: Deploy to Yandex Cloud
