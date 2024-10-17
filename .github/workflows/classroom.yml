@@ -50,8 +50,9 @@ jobs:
       - name: Install Yandex Cloud CLI
         run: |
           curl https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
-          source /home/runner/.bashrc
-          echo 'export PATH="$PATH:/home/runner/yandex-cloud/bin"' >> $GITHUB_ENV
+          echo "/home/runner/yandex-cloud/bin" >> $GITHUB_PATH
+          echo 'export PATH="$PATH:/home/runner/yandex-cloud/bin"' >> ~/.bashrc
+          echo "Yandex Cloud CLI installed."
 
       # Шаг 4: Make migrations
       - name: Make migrations
@@ -74,11 +75,10 @@ jobs:
       # Шаг 7: Аутентификация в Yandex Cloud
       - name: Authenticate to Yandex Cloud
         run: |
-          echo '${{ secrets.YC_SERVICE_ACCOUNT_KEY }}' > key.json
-          yc iam key create --service-account-name github-actions --output key.json
-          yc config set cloud-id ${{ secrets.YC_CLOUD_ID }}
-          yc config set folder-id ${{ secrets.YC_FOLDER_ID }}
-          yc container registry configure-docker
+          /home/runner/yandex-cloud/bin/yc iam key create --service-account-name github-actions --output key.json
+          /home/runner/yandex-cloud/bin/yc config set cloud-id ${{ secrets.YC_CLOUD_ID }}
+          /home/runner/yandex-cloud/bin/yc config set folder-id ${{ secrets.YC_FOLDER_ID }}
+          /home/runner/yandex-cloud/bin/yc container registry configure-docker
 
       # Шаг 8: Сборка Docker-образа приложения
       - name: Build Docker image
