@@ -84,12 +84,16 @@ jobs:
       # Шаг 8: Сборка Docker-образа приложения
       - name: Build Docker image
         run: |
-          docker build -t cr.yandex/${{ secrets.YC_REGION }}/my-registry/my-app:${{ github.sha }} .
+          docker build -t cr.yandex/${{ secrets.YC_REGION }}/${{ secrets.CR_REPOSITORY }}/my-registry/my-app:${{ github.sha }} .
 
       # Шаг 9: Сборка Docker-образа для PostgreSQL
       - name: Build PostgreSQL Docker image
         run: |
-          docker build -t cr.yandex/${{ secrets.YC_REGION }}/my-registry/postgres:${{ github.sha }} -f Dockerfile .
+          docker build -t cr.yandex/${{ secrets.YC_REGION }}/${{ secrets.CR_REPOSITORY }}/my-registry/postgres:${{ github.sha }} -f Dockerfile .
+
+      - name: Verify Docker image exists
+        run: |
+          docker images cr.yandex/${{ secrets.YC_REGION }}/${{ secrets.CR_REPOSITORY }}/my-registry/my-app:${{ github.sha }}
 
       # Шаг 10: Публикация образов в Yandex Container Registry
       - name: Push Docker images
