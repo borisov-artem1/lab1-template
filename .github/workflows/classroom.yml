@@ -101,26 +101,27 @@ jobs:
           docker push cr.yandex/${{ secrets.CR_REPOSITORY }}/artemborisov/my-app:${{ github.sha }}
           docker push cr.yandex/${{ secrets.CR_REPOSITORY }}/artemborisov/postgres:${{ github.sha }}
 
-      # Шаг 11: Удаление существующих инстансов, если они уже существуют
-      - name: Delete existing instances (if any)
-        continue-on-error: true
-        run: |
-          yc compute instance delete --name my-app-instance
-          yc compute instance delete --name postgres-instance
+      # Шаг 11: Деплой приложения и базы данных на существующую машину через SSH
+      - name: Deploy to existing Yandex Cloud machine via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: 84.201.169.121
+          username: artemborisov
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      # Шаг 12: Деплой приложения и базы данных на Yandex Cloud
-      - name: Deploy to existing Yandex Cloud machine
-        run: |
-          # Обновление контейнера с веб-приложением на существующей машине
-          yc compute instance update-container \
-            --name compute-vm-2-1-10-hdd-1729111803241 \
-            --container-image=cr.yandex/${{ secrets.CR_REPOSITORY }}/artemborisov/my-app:${{ github.sha }} \
+          # Обновление Docker-контейнеров на сервере
+          script: |
+            docker pull cr.yandex/${{ secrets.CR_REPOSITORY }}/artemborisov/my-app:${{ github.sha }}
+            docker pull cr.yandex/${{ secrets.CR_REPOSITORY }}/artemborisov/postgres:${{ github.sha }}
 
-          # Обновление контейнера с PostgreSQL на существующей машине
-          yc compute instance update-container \
-            --name compute-vm-2-1-10-hdd-1729111803241 \
-            --container-image=cr.yandex/${{ secrets.CR_REPOSITORY }}/artemborisov/postgres:${{ github.sha }} \
+            docker stop my-app || true
+            docker rm my-app || true
+            docker stop postgres || true
+            docker rm postgres || true
 
+            docker run -d --name my-app -p 8080:8080 cr.yandex/${{ secrets.CR_REPOSITORY }}/artemborisov/my-app:${{ github.sha }}
+            docker run -d --name postgres -p 5432:5432 cr.yandex/${{ secrets.CR_REPOSITORY }}/artemborisov/postgres:${{ github.sha }}
+      
 
       # Шаг 12: Запуск тестов API через Postman
       - name: Run API Tests
