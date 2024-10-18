@@ -115,13 +115,11 @@ jobs:
           yc compute instance update-container \
             --name compute-vm-2-1-10-hdd-1729111803241 \
             --container-image=cr.yandex/${{ secrets.CR_REPOSITORY }}/artemborisov/my-app:${{ github.sha }} \
-            --restart
 
           # Обновление контейнера с PostgreSQL на существующей машине
           yc compute instance update-container \
             --name compute-vm-2-1-10-hdd-1729111803241 \
             --container-image=cr.yandex/${{ secrets.CR_REPOSITORY }}/artemborisov/postgres:${{ github.sha }} \
-            --restart
 
 
       # Шаг 12: Запуск тестов API через Postman
