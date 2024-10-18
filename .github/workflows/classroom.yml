@@ -109,33 +109,27 @@ jobs:
           yc compute instance delete --name postgres-instance
 
       # Шаг 12: Деплой приложения и базы данных на Yandex Cloud
-      - name: Deploy to Yandex Cloud
+      - name: Deploy to existing Yandex Cloud machine
         run: |
-          yc compute instance create-with-container \
-            --name my-app-instance \
-            --cores=2 \
-            --memory=4 \
-            --core-fraction=100 \
+          # Обновление контейнера с веб-приложением на существующей машине
+          yc compute instance update-container \
+            --name compute-vm-2-1-10-hdd-1729111803241 \
             --container-image=cr.yandex/${{ secrets.CR_REPOSITORY }}/artemborisov/my-app:${{ github.sha }} \
-            --public-ip \
-            --zone ru-central1-a
+            --restart
 
-          yc compute instance create-with-container \
-            --name postgres-instance \
-            --cores=2 \
-            --memory=4 \
-            --core-fraction=100 \
+          # Обновление контейнера с PostgreSQL на существующей машине
+          yc compute instance update-container \
+            --name compute-vm-2-1-10-hdd-1729111803241 \
             --container-image=cr.yandex/${{ secrets.CR_REPOSITORY }}/artemborisov/postgres:${{ github.sha }} \
-            --public-ip \
-            --zone ru-central1-a
+            --restart
 
 
       # Шаг 12: Запуск тестов API через Postman
       - name: Run API Tests
         uses: matt-ball/newman-action@master
         with:
-          collection: postman/[inst] Lab1.postman_collection.json
-          environment: postman/[inst] Lab1.postman_environment.json
+          collection: lab1-template/postman/[inst] Lab1.postman_collection.json
+          environment: lab1-template/postman/[inst] Lab1.postman_environment.json
           delayRequest: 100
           reporters: '[ "cli" ]'
 
