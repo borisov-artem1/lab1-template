@@ -112,6 +112,13 @@ jobs:
 
           # Обновление Docker-контейнеров на сервере
           script: |
+            # Аутентификация в Yandex Cloud CLI
+            echo '${{ secrets.YC_SERVICE_ACCOUNT_KEY }}' > key.json
+            yc config set service-account-key key.json
+            yc config set cloud-id ${{ secrets.YC_CLOUD_ID }}
+            yc config set folder-id ${{ secrets.YC_FOLDER_ID }}
+            
+            
             if ! [ -x "$(command -v docker)" ]; then
               echo "Docker not installed. Installing Docker..."
               sudo apt update
@@ -122,7 +129,9 @@ jobs:
               echo "Docker installed."
             fi
             
+            # Настройка Docker для работы с Yandex Container Registry
             yc container registry configure-docker
+            echo "Docker authenticated with Yandex Container Registry"
             
             sudo docker pull cr.yandex/${{ secrets.CR_REPOSITORY }}/artemborisov/my-app:${{ github.sha }}
             sudo docker pull cr.yandex/${{ secrets.CR_REPOSITORY }}/artemborisov/postgres:${{ github.sha }}
