@@ -121,6 +121,9 @@ jobs:
               sudo usermod -aG docker $USER
               echo "Docker installed."
             fi
+            
+            yc container registry configure-docker
+            
             sudo docker pull cr.yandex/${{ secrets.CR_REPOSITORY }}/artemborisov/my-app:${{ github.sha }}
             sudo docker pull cr.yandex/${{ secrets.CR_REPOSITORY }}/artemborisov/postgres:${{ github.sha }}
 
