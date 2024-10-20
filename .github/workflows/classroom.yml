@@ -112,6 +112,15 @@ jobs:
 
           # Обновление Docker-контейнеров на сервере
           script: |
+            if ! [ -x "$(command -v docker)" ]; then
+              echo "Docker not installed. Installing Docker..."
+              sudo apt update
+              sudo apt install -y docker.io
+              sudo systemctl start docker
+              sudo systemctl enable docker
+              sudo usermod -aG docker $USER
+              echo "Docker installed."
+            fi
             docker pull cr.yandex/${{ secrets.CR_REPOSITORY }}/artemborisov/my-app:${{ github.sha }}
             docker pull cr.yandex/${{ secrets.CR_REPOSITORY }}/artemborisov/postgres:${{ github.sha }}
 
