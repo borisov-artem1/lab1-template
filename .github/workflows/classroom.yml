@@ -135,7 +135,9 @@ jobs:
 
           # Обновление Docker-контейнеров на сервере
           script: |
-            
+            # Аутентификация Docker в Yandex Container Registry
+            docker login --username oauth --password "$(yc iam create-token)"
+
             sudo docker pull cr.yandex/${{ secrets.CR_REPOSITORY }}/artemborisov/my-app:${{ github.sha }}
             sudo docker pull cr.yandex/${{ secrets.CR_REPOSITORY }}/artemborisov/postgres:${{ github.sha }}
 
