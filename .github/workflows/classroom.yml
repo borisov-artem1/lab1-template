@@ -112,6 +112,12 @@ jobs:
 
           # Обновление Docker-контейнеров на сервере
           script: |
+            # Установка Yandex CLI
+            curl https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
+            echo 'export PATH=$PATH:/home/$USER/yandex-cloud/bin' >> ~/.bashrc
+            source ~/.bashrc
+            echo "Yandex CLI installed"
+            
             # Аутентификация в Yandex Cloud CLI
             echo '${{ secrets.YC_SERVICE_ACCOUNT_KEY }}' > key.json
             yc config set service-account-key key.json
