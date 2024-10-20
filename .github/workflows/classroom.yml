@@ -137,14 +137,21 @@ jobs:
           script: |
             # Аутентификация Docker в Yandex Container Registry
             docker login --username oauth --password "$(yc iam create-token)"
+            
+            if [ "$(docker ps -q)" ]; then
+              sudo docker kill $(docker ps -q) &> /dev/null
+            fi
+            if [ "$(docker ps -a -q)" ]; then
+              sudo docker rm $(docker ps -a -q) &> /dev/null
+            fi
+            
+            #sudo docker pull cr.yandex/${{ secrets.CR_REPOSITORY }}/artemborisov/my-app:${{ github.sha }}
+            #sudo docker pull cr.yandex/${{ secrets.CR_REPOSITORY }}/artemborisov/postgres:${{ github.sha }}
 
-            sudo docker pull cr.yandex/${{ secrets.CR_REPOSITORY }}/artemborisov/my-app:${{ github.sha }}
-            sudo docker pull cr.yandex/${{ secrets.CR_REPOSITORY }}/artemborisov/postgres:${{ github.sha }}
-
-            sudo docker stop my-app || true
-            sudo docker rm my-app || true
-            sudo docker stop postgres || true
-            sudo docker rm postgres || true
+            #sudo docker stop my-app || true
+            #sudo docker rm my-app || true
+            #sudo docker stop postgres || true
+            #sudo docker rm postgres || true
 
             sudo docker run -d --name my-app -p 8080:8080 cr.yandex/${{ secrets.CR_REPOSITORY }}/artemborisov/my-app:${{ github.sha }}
             sudo docker run -d --name postgres -e POSTGRES_DB=persons -e POSTGRES_USER=program -e POSTGRES_PASSWORD=test -p 5432:5432 cr.yandex/${{ secrets.CR_REPOSITORY }}/artemborisov/postgres:${{ github.sha }}
