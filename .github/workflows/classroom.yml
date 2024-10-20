@@ -110,7 +110,10 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT || '22' }}
           script: |
-
+            
+            # Добавление пути к Yandex CLI
+            export PATH=$PATH:/home/$USER/yandex-cloud/bin
+            
             # Аутентификация Yandex Cloud CLI
             echo '${{ secrets.YC_SERVICE_ACCOUNT_KEY }}' > key.json
             yc config set service-account-key key.json
