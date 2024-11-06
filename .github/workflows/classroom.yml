@@ -70,7 +70,7 @@ jobs:
           ssh-keyscan -p ${{ secrets.SSH_PORT }} -H ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts
 
       - name: Connect and Deploy
-        run: ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ${{ secrets.CR_REPOSITORY }} && git pull && make deploy"
+        run: ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ${{ secrets.SERVER_WORKDIR }} && git pull && make deploy"
 
       - name: Clean
         run: rm -rf ~/.ssh
