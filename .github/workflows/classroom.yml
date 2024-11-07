@@ -61,7 +61,7 @@ jobs:
       - name: Run Django Tests
         run: |
           . venv/bin/activate
-          python djangoProject/manage.py test
+          python djangoProject/myproject/manage.py test
 
       # Шаг 4: Устанавливаем SSH-ключ для доступа к серверу
       - name: Install SSH Key
