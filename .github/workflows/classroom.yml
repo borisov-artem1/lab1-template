@@ -70,28 +70,36 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           ssh-keyscan -p ${{ secrets.SSH_PORT }} -H ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts
 
-      # Шаг 5: Копирование файлов и запуск docker-compose на сервере
-      - name: Deploy to Yandex Cloud
+      - name: Create deployment package
+        run: |
+          mkdir deploy_package
+          cp -r djangoProject Dockerfile docker-compose.yml requirements.txt .env deploy_package/
+          tar -czf project.tar.gz -C deploy_package .
+          rm -rf deploy_package
+
+      - name: Copy package to server
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_PORT: ${{ secrets.SSH_PORT }}
           SSH_USER: ${{ secrets.SSH_USER }}
-          DOCKER_COMPOSE_FILE: docker-compose.yml
         run: |
-          # Архивируем проект
-          tar -czf project.tar.gz .
-          
-          # Копируем архив на сервер
           scp -P $SSH_PORT project.tar.gz $SSH_USER@$SSH_HOST:/home/$SSH_USER/project.tar.gz
 
-          # Подключаемся к серверу и запускаем обновление контейнеров
+      - name: Deploy on server
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
           ssh -p $SSH_PORT $SSH_USER@$SSH_HOST << EOF
             cd /home/$SSH_USER
-            tar -xzf project.tar.gz -C /home/$SSH_USER/my_project
+            mkdir -p my_project
+            tar -xzf project.tar.gz -C my_project
             cd my_project
             docker-compose down
             docker-compose up --build -d
           EOF
+
 
       # Шаг 6: Чистка временных файлов
       - name: Clean up
