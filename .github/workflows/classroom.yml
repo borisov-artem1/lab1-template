@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Шаг 1: Клонируем репозиторий
+      # Шаг 1: Клонируем репозиторий jd
       - name: Checkout code
         uses: actions/checkout@v2
 
