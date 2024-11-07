@@ -33,7 +33,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Шаг 2: Установка Python и зависимостей
+      # Шаг 2: Установка Python и зависимостейj
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
