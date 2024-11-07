@@ -23,4 +23,5 @@ COPY . /app/
 EXPOSE 8080
 
 # Команда запуска
-CMD ["sh", "-c", "python manage.py migrate && python manage.py collectstatic --noinput && python manage.py runserver 0.0.0.0:8080"]
+CMD ["sh", "-c", "python djangoProject/myproject/manage.py migrate && python djangoProject/myproject/manage.py collectstatic --noinput && python djangoProject/myproject/manage.py runserver 0.0.0.0:8080"]
+
