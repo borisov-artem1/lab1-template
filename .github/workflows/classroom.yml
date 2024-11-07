@@ -1,40 +1,20 @@
-name: GitHub Classroom Workflow
+name: Build and Deploy
 
 on:
   push:
     branches:
-      - dev
-  pull_request:
-    branches:
-      - dev
+      - main  # Замените на нужную ветку
 
 jobs:
   build:
-    name: DEPLOY
     runs-on: ubuntu-latest
-
-    services:
-      postgres:
-        image: postgres:13
-        env:
-          POSTGRES_DB: persons
-          POSTGRES_USER: program
-          POSTGRES_PASSWORD: test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd="pg_isready"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
 
     steps:
       # Шаг 1: Клонируем репозиторий
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-      # Шаг 2: Установка Python и зависимостей
+      # Шаг 2: Настраиваем Python окружение и устанавливаем зависимости
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
@@ -42,60 +22,46 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m venv venv
-          . venv/bin/activate
+          python -m pip install --upgrade pip
           pip install -r djangoProject/requirements.txt
 
-      # Шаг 4: Make migrations
-      - name: Make migrations
-        run: |
-          . venv/bin/activate
-          python djangoProject/myproject/manage.py makemigrations
-
-      # Шаг 5: Применение миграций
-      - name: Run migrations
-        run: |
-          . venv/bin/activate
-          python djangoProject/myproject/manage.py migrate
-
-      # Шаг 6: Запуск тестов Django
+      # Шаг 3: Запуск тестов (если они есть)
       - name: Run Django Tests
         run: |
           . venv/bin/activate
-          python djangoProject/myproject/manage.py test
+          python djangoProject/manage.py test
+
+      # Шаг 4: Устанавливаем SSH-ключ для доступа к серверу
       - name: Install SSH Key
         run: |
           install -m 600 -D /dev/null ~/.ssh/id_rsa
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           ssh-keyscan -p ${{ secrets.SSH_PORT }} -H ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts
 
-      - name: Connect and Deploy
-        run: ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ${{ secrets.SERVER_WORKDIR }} && git pull && make deploy"
+      # Шаг 5: Копирование файлов и запуск docker-compose на сервере
+      - name: Deploy to Yandex Cloud
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          DOCKER_COMPOSE_FILE: docker-compose.yml
+        run: |
+          # Архивируем проект
+          tar -czf project.tar.gz .
+          
+          # Копируем архив на сервер
+          scp -P $SSH_PORT project.tar.gz $SSH_USER@$SSH_HOST:/home/$SSH_USER/project.tar.gz
 
-      - name: Clean
-        run: rm -rf ~/.ssh
+          # Подключаемся к серверу и запускаем обновление контейнеров
+          ssh -p $SSH_PORT $SSH_USER@$SSH_HOST << EOF
+            cd /home/$SSH_USER
+            tar -xzf project.tar.gz -C /home/$SSH_USER/my_project
+            cd my_project
+            docker-compose down
+            docker-compose up --build -d
+          EOF
 
+      # Шаг 6: Чистка временных файлов
+      - name: Clean up
+        run: rm -rf ~/.ssh project.tar.gz
 
-      # Шаг 12: Запуск тестов API через Postman
-      - name: Run API Tests
-        uses: matt-ball/newman-action@master
-        with:
-          collection: lab1-template/postman/[inst] Lab1.postman_collection.json
-          environment: lab1-template/postman/[inst] Lab1.postman_environment.json
-          delayRequest: 100
-          reporters: '[ "cli" ]'
-
-      # Шаг 13: Автогрейдинг
-      - name: Autograding
-        uses: education/autograding@v1
-        continue-on-error: true
-
-      - name: Github auto grader mark
-        uses: Romanow/google-sheet-autograder-marker@v1.0
-        with:
-          google_token: ${{ secrets.GOOGLE_API_KEY }}
-          sheet_id: "1xkgjUX6Qmk7rdJG-QPOToav-HWWtthJjnShIKnw3oIY"
-          homework_number: 1
-          user_column: 'D'
-          column_offset: 'F'
-          mark: "'+"

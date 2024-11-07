@@ -22,5 +22,5 @@ COPY . /app/
 # Открываем порт для приложения
 EXPOSE 8080
 
-# Выполняем миграции, собираем статику и запускаем сервер
+# Команда запуска
 CMD ["sh", "-c", "python manage.py migrate && python manage.py collectstatic --noinput && python manage.py runserver 0.0.0.0:8080"]
