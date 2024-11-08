@@ -28,17 +28,17 @@ class PersonTestCase(APITestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['name'], self.person.name)
-        self.assertEqual(response.json()['age'], self.person.age)
         self.assertEqual(response.json()['address'], self.person.address)
         self.assertEqual(response.json()['work'], self.person.work)
+        self.assertEqual(response.json()['age'], self.person.age)
 
     def test_create_person(self):
         """Тестирование создания объекта person (POST api/v1/persons/)"""
         data = {
             'name': 'Tim Doe',
-            'age': 30,
             'address': '123 New Street',
-            'work': 'Doctor'
+            'work': 'Doctor',
+            'age': 30
         }
         response = self.client.post(self.base_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
