@@ -33,7 +33,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Шаг 2: Установка Python и зависимостейj
+      # Шаг 2: Установка Python и зависимостей для подготовки пакета
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
@@ -45,31 +45,14 @@ jobs:
           . venv/bin/activate
           pip install -r djangoProject/requirements.txt
 
-      # Шаг 4: Make migrations
-      - name: Make migrations
-        run: |
-          . venv/bin/activate
-          python djangoProject/myproject/manage.py makemigrations
-
-      # Шаг 5: Применение миграций
-      - name: Run migrations
-        run: |
-          . venv/bin/activate
-          python djangoProject/myproject/manage.py migrate
-
-      # Шаг 3: Запуск тестов (если они есть)
-      - name: Run Django Tests
-        run: |
-          . venv/bin/activate
-          python djangoProject/myproject/manage.py test
-
-      # Шаг 4: Устанавливаем SSH-ключ для доступа к серверу
+      # Шаг 3: Устанавливаем SSH-ключ для доступа к серверу
       - name: Install SSH Key
         run: |
           install -m 600 -D /dev/null ~/.ssh/id_rsa
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           ssh-keyscan -p ${{ secrets.SSH_PORT }} -H ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts
 
+      # Шаг 4: Создание пакета для деплоя
       - name: Create deployment package
         run: |
           mkdir deploy_package
@@ -77,6 +60,7 @@ jobs:
           tar -czf project.tar.gz -C deploy_package .
           rm -rf deploy_package
 
+      # Шаг 5: Копирование пакета на сервер
       - name: Copy package to server
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
@@ -85,6 +69,7 @@ jobs:
         run: |
           scp -P $SSH_PORT project.tar.gz $SSH_USER@$SSH_HOST:/home/$SSH_USER/project.tar.gz
 
+      # Шаг 6: Деплой на сервере и запуск миграций и тестов
       - name: Deploy on server
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
@@ -92,16 +77,28 @@ jobs:
           SSH_USER: ${{ secrets.SSH_USER }}
         run: |
           ssh -p $SSH_PORT $SSH_USER@$SSH_HOST << EOF
+            # Перемещаемся в домашний каталог и распаковываем проект
             cd /home/$SSH_USER
             mkdir -p my_project
             tar -xzf project.tar.gz -C my_project
             cd my_project
+            
+            # Запускаем контейнеры в фоновом режиме
             docker-compose down
             docker-compose up --build -d
+
+            # Ждём запуска контейнеров и проверяем статус базы данных
+            echo "Waiting for containers to be ready..."
+            sleep 10  # Задержка для инициализации
+          
+            docker-compose exec web python djangoProject/myproject/manage.py makemigrations
+            # Запускаем миграции внутри контейнера Django
+            docker-compose exec web python djangoProject/myproject/manage.py migrate
+
+            # Запускаем тесты внутри контейнера Django
+            docker-compose exec web python djangoProject/myproject/manage.py test
           EOF
 
-
-      # Шаг 6: Чистка временных файлов
+      # Шаг 7: Чистка временных файлов
       - name: Clean up
         run: rm -rf ~/.ssh project.tar.gz
-
