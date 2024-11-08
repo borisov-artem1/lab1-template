@@ -91,12 +91,13 @@ jobs:
             echo "Waiting for containers to be ready..."
             sleep 10  # Задержка для инициализации
           
-            docker-compose exec web python djangoProject/myproject/manage.py makemigrations
+            docker-compose exec -T web python djangoProject/myproject/manage.py makemigrations
+            
             # Запускаем миграции внутри контейнера Django
-            docker-compose exec web python djangoProject/myproject/manage.py migrate
+            docker-compose exec -T web python djangoProject/myproject/manage.py migrate
 
             # Запускаем тесты внутри контейнера Django
-            docker-compose exec web python djangoProject/myproject/manage.py test
+            docker-compose exec -T web python djangoProject/myproject/manage.py test
           EOF
 
       # Шаг 7: Чистка временных файлов
