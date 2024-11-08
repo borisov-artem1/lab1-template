@@ -19,9 +19,6 @@ def main():
             "forget to activate a virtual environment?"
         ) from exc
 
-    if len(sys.argv) == 1:
-        sys.argv.append('runserver')
-        sys.argv.append('8080')
     execute_from_command_line(sys.argv)
 
 

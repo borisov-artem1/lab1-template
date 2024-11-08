@@ -1,6 +1,6 @@
 import requests
 
-BASE_URL = 'http://127.0.0.1:8080/api/v1/persons/'
+BASE_URL = 'http://0.0.0.0:8080/api/v1/persons/'
 
 def get_persons(person_id = -1):
     msg = ''
@@ -57,8 +57,8 @@ def delete_persons(person_id):
 
 if __name__ == '__main__':
     # Примеры использования клиента
-    #create_persons('John', 20, 'Kantemirovskaya', 'Engineer')
-    #create_persons('Will', 19, 'Baumanskaya', 'Doctor')
+    create_persons('John', 20, 'Kantemirovskaya', 'Engineer')
+    create_persons('Will', 19, 'Baumanskaya', 'Doctor')
     get_persons(1)
     update_persons(2, 'name', 12, 'address', 'work')  # замените 1 на нужный id
     get_persons(2)
