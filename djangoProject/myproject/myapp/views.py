@@ -44,10 +44,12 @@ def myapp(request, id=None):
             person = Person.objects.get(id=id)
         except Person.DoesNotExist:
             return JsonResponse({'message': 'Person does not exist'}, status=status.HTTP_404_NOT_FOUND)
-        person_serializer = PersonSerializer(person, data=upd_person)
-
-        return JsonResponse(person_serializer.data, status=status.HTTP_200_OK)
-
+        person_serializer = PersonSerializer(person, data=upd_person, partial=True)
+        if person_serializer.is_valid():
+            person_serializer.save()
+            return JsonResponse(person_serializer.data, status=status.HTTP_200_OK)
+        else:
+            return JsonResponse({'message': 'Person serializer error'}, status=status.HTTP_400_BAD_REQUEST)
     elif request.method == 'DELETE':
         try:
             person = Person.objects.get(id=id)
