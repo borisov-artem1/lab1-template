@@ -39,7 +39,7 @@ def myapp(request, id=None):
         try:
             upd_person = JSONParser().parse(request)
         except:
-            return JsonResponse({'message': 'Invalid JSON'}, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse({'message': 'Invalid JSON'}, status=status.HTTP_200_OK)
         try:
             person = Person.objects.get(id=id)
         except Person.DoesNotExist:
