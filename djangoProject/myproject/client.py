@@ -62,5 +62,5 @@ if __name__ == '__main__':
     get_persons(1)
     update_persons(2, 'name', 12, 'address', 'work')  # замените 1 на нужный id
     get_persons(2)
-    delete_persons(1)  # замените 1 на нужный id
+    delete_persons(2)  # замените 1 на нужный id
     get_persons()
