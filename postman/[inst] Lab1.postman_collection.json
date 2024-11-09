@@ -277,23 +277,23 @@
 	"variable": [
 		{
 			"key": "name",
-			"value": "John"
+			"value": ""
 		},
 		{
 			"key": "address",
-			"value": "Kantemyrovskaya"
+			"value": ""
 		},
 		{
 			"key": "work",
-			"value": "engineer"
+			"value": ""
 		},
 		{
 			"key": "age",
-			"value": "20"
+			"value": ""
 		},
 		{
 			"key": "personId",
-			"value": "2"
+			"value": ""
 		}
 	]
 }
