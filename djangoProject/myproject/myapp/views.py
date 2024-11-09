@@ -46,7 +46,6 @@ def myapp(request, id=None):
             return JsonResponse({'message': 'Person does not exist'}, status=status.HTTP_404_NOT_FOUND)
         person_serializer = PersonSerializer(person, data=upd_person)
 
-        person_serializer.save()
         return JsonResponse(person_serializer.data, status=status.HTTP_200_OK)
 
     elif request.method == 'DELETE':
